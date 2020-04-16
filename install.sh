@@ -12,4 +12,8 @@ echo "compiling pigpio master ... (this can take time : ~ 3 minutes)"
 make
 echo "installing pigpio library ..."
 sh -c "sudo make install"
+echo "starting pigpiod service ..."
+sh -c "sudo pigpiod"
+cd ../..
+sh -c "sudo rm -r temp"
 echo "everything done !"

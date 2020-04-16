@@ -112,10 +112,3 @@ class SF501R:
                 self.send_command(onoff,i,1)
 
 
-DATA_PIN    = 25     # BROADCOM number of the gpio pin connected to the 433.9MHz RX
-PROTOCOL_ID = 0x1035 # ID used by the protocol, to be changed with yours ID.
-
-tester = SF501R(PROTOCOL_ID,DATA_PIN)
-tester.switch_all(True)
-time.sleep(2)
-tester.switch_all(False)
