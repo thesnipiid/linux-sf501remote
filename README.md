@@ -15,7 +15,7 @@ To install the only one library necessary, pls try to launch the install.sh scri
 To start using the library import it and create a new SF501R object
 
 ```python
-import sf501-remote
+import sf501remote
 
 myObject = SF501R(pin,id)
 ```
@@ -25,7 +25,7 @@ myObject = SF501R(pin,id)
 #### 2.  How to send data
 
 ```python
-myObject.send_ommand(onoff, channel, repeat=8);
+myObject.send_command(onoff, channel, repeat=8);
 ```
 - **onOff:** 0 is off button 1 is on button.
 - **channel:** a 4 bit value (1 - 15) discribing the button number (the remotes I have, have only 4 buttons).
