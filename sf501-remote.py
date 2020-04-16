@@ -1,18 +1,20 @@
 import time
 import pigpio
 
-DATA_PIN    = 25     # BROADCOM number of the gpio pin connected to the 433.9MHz RX
 PULSE_LEN   = 185    # the length of the pulse used in the SF501R protocol
-PROTOCOL_ID = 0x1035 # ID used by the protocol, to be changed with yours ID.
 
 class SF501R:
+    max_devices = 4
 
-    def __init__(self,pin=25,id):
+    def __init__(self,id,pin=25):
         self.protocol_id = id
         self.data_pin = pin
         self.gpio = pigpio.pi()                         #create localhost connection with pigpiod daemon
         self.gpio.set_mode(self.data_pin,pigpio.OUTPUT) # Set the data pin as output
         self._init_precompiled_frames()
+
+    def set_max_devices(max):
+        self.max_devices = max
 
     def _init_precompiled_frames(self):
         """
@@ -35,7 +37,7 @@ class SF501R:
                                pigpio.pulse(1<<self.data_pin,0,1*PULSE_LEN),
                                pigpio.pulse(0,1<<self.data_pin,7*PULSE_LEN)]
 
-    def send_command(self,onoff,channel,repeat=8):
+    def send_command(self,onoff,channel,repeat=4):
         """
         This is the main function used to send command to a
         socket.
@@ -104,11 +106,16 @@ class SF501R:
         # clear the chained waveformes
         self.gpio.wave_clear()
 
-        time.sleep(0.5)
+    def switch_all(self,onoff,repeat=4):
+        for y in range(repeat):
+            for i in range(0,self.max_devices):
+                self.send_command(onoff,i,1)
 
-tester = SF501R()
-print("ON ch 1")
-tester.send_command(True,0xF,2)
+
+DATA_PIN    = 25     # BROADCOM number of the gpio pin connected to the 433.9MHz RX
+PROTOCOL_ID = 0x1035 # ID used by the protocol, to be changed with yours ID.
+
+tester = SF501R(PROTOCOL_ID,DATA_PIN)
+tester.switch_all(True)
 time.sleep(2)
-print("OFF ch 1")
-tester.send_command(False,0xF,2)
+tester.switch_all(False)

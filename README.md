@@ -7,6 +7,11 @@ A python library to control SF-501 RF switches by Flamingo (Smartwares.eu) . The
 
 >NOTE: THIS IS NOT A LIBRARY FOR THE SF-501SHC!!! The SHC version is a smart controller with app, that commuicates with a cloud api and is able to control the standard 'dumb' sf-501 rf sockets.
 
+### Installing 
+
+To install the only one library necessary, pls try to launch the install.sh script. If it's not working, refer to the official pigpio library site : http://abyz.me.uk/rpi/pigpio/index.html
+
+#### 1. Starting 
 To start using the library import it and create a new SF501R object
 
 ```python
