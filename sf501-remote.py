@@ -6,27 +6,43 @@ PULSE_LEN   = 185    # the length of the pulse used in the SF501R protocol
 PROTOCOL_ID = 0x1035 # ID used by the protocol, to be changed with yours ID.
 
 class SF501R:
-    frame_preamble = [pigpio.pulse(1<<DATA_PIN,0,1*PULSE_LEN),
-                      pigpio.pulse(0,1<<DATA_PIN,14*PULSE_LEN)]
 
-    frame_end      = [pigpio.pulse(1<<DATA_PIN,0,1*PULSE_LEN),
-                      pigpio.pulse(0,1<<DATA_PIN,100*PULSE_LEN)]
+    def __init__(self,pin=25,id):
+        self.protocol_id = id
+        self.data_pin = pin
+        self.gpio = pigpio.pi()                         #create localhost connection with pigpiod daemon
+        self.gpio.set_mode(self.data_pin,pigpio.OUTPUT) # Set the data pin as output
+        self._init_precompiled_frames()
 
-    frame_bit_high = [pigpio.pulse(1<<DATA_PIN,0,1*PULSE_LEN),
-                      pigpio.pulse(0,1<<DATA_PIN,7*PULSE_LEN),
-                      pigpio.pulse(1<<DATA_PIN,0,1*PULSE_LEN),
-                      pigpio.pulse(0,1<<DATA_PIN,2*PULSE_LEN)]
+    def _init_precompiled_frames(self):
+        """
+        This function is not supposed to be called by user.
+        It compute some "pre-compiled" waves.
+        """
+        self.frame_preamble = [pigpio.pulse(1<<self.data_pin,0,1*PULSE_LEN),
+                               pigpio.pulse(0,1<<self.data_pin,14*PULSE_LEN)]
 
-    frame_bit_low  = [pigpio.pulse(1<<DATA_PIN,0,1*PULSE_LEN),
-                      pigpio.pulse(0,1<<DATA_PIN,2*PULSE_LEN),
-                      pigpio.pulse(1<<DATA_PIN,0,1*PULSE_LEN),
-                      pigpio.pulse(0,1<<DATA_PIN,7*PULSE_LEN)]
+        self.frame_end      = [pigpio.pulse(1<<self.data_pin,0,1*PULSE_LEN),
+                               pigpio.pulse(0,1<<self.data_pin,100*PULSE_LEN)]
 
-    def __init__(self):
-        self.gpio = pigpio.pi() #create localhost connection with pigpiod daemon
-        self.gpio.set_mode(DATA_PIN,pigpio.OUTPUT)
+        self.frame_bit_high = [pigpio.pulse(1<<self.data_pin,0,1*PULSE_LEN),
+                               pigpio.pulse(0,1<<self.data_pin,7*PULSE_LEN),
+                               pigpio.pulse(1<<self.data_pin,0,1*PULSE_LEN),
+                               pigpio.pulse(0,1<<self.data_pin,2*PULSE_LEN)]
 
-    def send_command(self,onoff,channel,repeat):
+        self.frame_bit_low  = [pigpio.pulse(1<<self.data_pin,0,1*PULSE_LEN),
+                               pigpio.pulse(0,1<<self.data_pin,2*PULSE_LEN),
+                               pigpio.pulse(1<<self.data_pin,0,1*PULSE_LEN),
+                               pigpio.pulse(0,1<<self.data_pin,7*PULSE_LEN)]
+
+    def send_command(self,onoff,channel,repeat=8):
+        """
+        This is the main function used to send command to a
+        socket.
+        onoff   -> Boolean -> True : ON , False : OFF
+        channel -> 4 bits  -> the socket to command
+        repeat  -> int     -> the number of time that the entire command need to be repeated
+        """
         id  = [0]*16
         cmd = [0]*4
         ch  = [0]*4
@@ -39,7 +55,7 @@ class SF501R:
 
         # ID
         for i in range (0,16):
-            if((PROTOCOL_ID >> (15 - i)) & 1):
+            if((self.protocol_id >> (15 - i)) & 1):
                 self.gpio.wave_add_generic(self.frame_bit_high)
                 id[i] = self.gpio.wave_create()
             else:
@@ -70,18 +86,18 @@ class SF501R:
                 self.gpio.wave_add_generic(self.frame_bit_low)
                 ch[i] = self.gpio.wave_create()
 
-        # END 
+        # END
         self.gpio.wave_add_generic(self.frame_end)
         end = self.gpio.wave_create()
         # concatenate the entire frame
 
         # end the repeat loop
         end_loop = [255,1,repeat,0]
-        command = start_loop + [preamble] + id + [255,0] + [reserved] + [255,1,8,0] + cmd + ch + [end] + end_loop 
+        command = start_loop + [preamble] + id + [255,0] + [reserved] + [255,1,8,0] + cmd + ch + [end] + end_loop
 
         # send the command
         self.gpio.wave_chain(command)
-        
+
         while self.gpio.wave_tx_busy():
             time.sleep(0.1)
 
@@ -90,14 +106,9 @@ class SF501R:
 
         time.sleep(0.5)
 
-
 tester = SF501R()
 print("ON ch 1")
-tester.send_command(True,1,2)
-print("ON ch 2")
-tester.send_command(True,2,2)
-time.sleep(1)
+tester.send_command(True,0xF,2)
+time.sleep(2)
 print("OFF ch 1")
-tester.send_command(False,1,2)
-print("OFF ch 2")
-tester.send_command(False,2,2)
+tester.send_command(False,0xF,2)
