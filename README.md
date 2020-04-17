@@ -32,7 +32,7 @@ myObject.send_command(onoff, channel, repeat=8);
 - **repeat:** *(Optional)* the number of packages to send each transmit the remotes send them 8 times. *(default: 8)*
 
 ```python
-myObject.switch_all(onOff,repeat = 8);
+myObject.switch_all(onOff,repeat=8);
 ```
 This is a helper function to switch all sockets at once.
 
@@ -48,8 +48,11 @@ Data section format:
 32 bits LSB data section
 
 32 - 18: 16 bit remote id, 65535 different remotes on this system.
+
 9 - 17: 8 bits are empty on all remotes.
+
 5 - 8: 4 bits a decimal value of 1 is switch **ON** a 0 is switch **OFF**.
+
 1 - 4: maximum of 15 buttons/channels per remote.
 
 Pulses are around 200µS.
